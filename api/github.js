@@ -1,20 +1,19 @@
-'use strict';
 
-var express = require('express');
+const express = require('express');
 var router = express.Router();
-var github = require('octonode');
-var fs = require('fs');
+const github = require('octonode');
+const fs = require('fs');
 
 const access_token = process.env.GITHUB_TOKEN; //Your personal access token (github)
 var client = github.client(access_token);
 var github_colors = {};
 
-fs.readFile('colors.json', 'utf8', function(err,data){
+fs.readFile('colors.json', 'utf8', (err,data) => {
     if(err) throw err;
     github_colors = JSON.parse(data);
 });
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.set('Access-Control-Allow-Origin','*');
     res.json({'methods':[
         '/popular',
@@ -24,7 +23,7 @@ router.get('/', function (req, res) {
 
 var mostPopularRepos = [];
 
-router.get('/popular', function(req, res) {
+router.get('/popular', (req, res) => {
     res.set('Access-Control-Allow-Origin','*');
     var count = req.query.count;
     var max_repos = req.query.max_repos;
@@ -48,7 +47,7 @@ router.get('/popular', function(req, res) {
     else {
         verbose = JSON.parse(verbose);
     }
-    client.me().repos(1, max_repos, function(err, repos) {
+    client.me().repos(1, max_repos, (err, repos) => {
         if(err) throw err;
 
         if(count > repos.length) {
@@ -84,7 +83,7 @@ router.get('/popular', function(req, res) {
 var mostUsedLanguages = [];
 var languageToll = {};
 
-router.get('/languages', function (req, res) {
+router.get('/languages', (req, res) => {
     res.set('Access-Control-Allow-Origin','*');
     var count = req.query.count;
     var max_repos = req.query.max_repos;
@@ -125,7 +124,7 @@ router.get('/languages', function (req, res) {
     if(truncate === undefined && include_null === false) {
         truncate = ['null'];
     }
-    client.me().repos(1, max_repos, function(err, repos) {
+    client.me().repos(1, max_repos, (err, repos) => {
         if(err) throw err;
 
         if(count > repos.length) {
@@ -172,7 +171,7 @@ router.get('/languages', function (req, res) {
 });
 
 
-function sortReposByStargazers(a,b) {
+const sortReposByStargazers = (a,b) => {
     if(a['stargazers_count'] < b['stargazers_count']) {
         return -1;
     }
@@ -194,7 +193,7 @@ function sortReposByStargazers(a,b) {
     }
 }
 
-function sortReposByRecentlyUpdated(a,b) {
+const sortReposByRecentlyUpdated = (a,b) => {
     var a_date = new Date(a['updated_at']);
     var b_date = new Date(b['updated_at']);
     if(a_date < b_date) {
@@ -208,7 +207,7 @@ function sortReposByRecentlyUpdated(a,b) {
     }
 }
 
-function sortReposByLanguage(a,b) {
+const sortReposByLanguage = (a,b) => {
     if(a['language'] < b['language']) {
         return -1;
     }
