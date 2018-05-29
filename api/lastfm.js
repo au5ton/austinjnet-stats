@@ -1,19 +1,18 @@
-'use strict';
 
-var express = require('express');
+const express = require('express');
 var router = express.Router();
-var https = require('https');
+const fetch = require('node-fetch')
 
 const lastfm_api_key = process.env.LASTFM_API_KEY;
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.set('Access-Control-Allow-Origin','*');
     res.json({'methods':[
         '/recent'
     ]});
 });
 
-router.get('/recent', function(request, response){
+router.get('/recent', (request, response) => {
     response.set('Access-Control-Allow-Origin','*');
     console.log('GET /api/lastfm/recent ', response.statusCode, request.query);
     var count = request.query.count;
@@ -21,24 +20,17 @@ router.get('/recent', function(request, response){
         count = 8;
     }
 
-    https.get('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=au5ton&api_key='+lastfm_api_key+'&format=json&extended=1', function(res) {
-        console.log('Got response: ' + res.statusCode);
-        var response_body = '';
-        res.on('data', function(chunk){
-            response_body += chunk;
-        });
-        res.on('end', function(){
-            //logger.log(JSON.parse(response_body));
-            response.json(generateLastfmRecents(JSON.parse(response_body), count));
-        });
-
-    }).on('error', function(e) {
-        console.log('Got error: ' + e.message);
-    });
+    fetch('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=au5ton&api_key='+lastfm_api_key+'&format=json&extended=1')
+    .then(res => res.json())
+    .catch(err => console.log)
+	.then(results => {
+        response.json(generateLastfmRecents(results, count));
+    })
+    .catch(err => console.log);
 
 });
 
-function generateLastfmRecents(data, count) {
+const generateLastfmRecents = (data, count) => {
     //things to return: cover_art, permalink, song_title, song_artist
     var arr = [];
     if(count > data['recenttracks']['track'].length) {
@@ -102,7 +94,7 @@ function generateLastfmRecents(data, count) {
     return arr;
 }
 
-function duplicateFound(arr,url) {
+const duplicateFound = (arr,url) => {
     for(let i = 0; i < arr.length; i++) {
         if(arr[i]['permalink'] === url) {
             return true;

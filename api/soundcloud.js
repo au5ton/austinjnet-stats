@@ -1,19 +1,18 @@
-'use strict';
 
-var express = require('express');
+const express = require('express');
 var router = express.Router();
-var https = require('https');
+const fetch = require('node-fetch');
 
 const soundcloud_client_id = process.env.SOUNDCLOUD_CLIENT_ID;
 
-router.get('/', function (req, res) {
+router.get('/', (req, res) => {
     res.set('Access-Control-Allow-Origin','*');
     res.json({'methods':[
         '/likes'
     ]});
 });
 
-router.get('/likes', function(request, response){
+router.get('/likes', (request, response) => {
     response.set('Access-Control-Allow-Origin','*');
     console.log('GET /api/soundcloud/likes ', response.statusCode, request.query);
     var count = request.query.count;
@@ -21,24 +20,18 @@ router.get('/likes', function(request, response){
         count = 8;
     }
 
-    https.get('https://api.soundcloud.com/users/44304060/favorites?client_id='+soundcloud_client_id, function(res) {
-        console.log('Got response: ' + res.statusCode);
-        var response_body = '';
-        res.on('data', function(chunk){
-            response_body += chunk;
-        });
-        res.on('end', function(){
-            response.json(generateSoundcloudLikes(JSON.parse(response_body), count));
-        });
-
-    }).on('error', function(e) {
-        console.log('Got error: ' + e.message);
-    });
+    fetch('https://api.soundcloud.com/users/44304060/favorites?client_id='+soundcloud_client_id)
+    .then(res => res.json())
+    .catch(err => console.log)
+	.then(results => {
+        response.json(generateSoundcloudLikes(results, count));
+    })
+    .catch(err => console.log);
 
 });
 
 
-function generateSoundcloudLikes(data, count) {
+const generateSoundcloudLikes = (data, count) => {
 
     //things to return: cover_art, permalink, song_title
     var arr = [];
